@@ -1,0 +1,14 @@
+# backend
+backend/storage/*
+!backend/storage/.gitkeep
+backend/tests/test_adapters/fixtures/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.db
+
+# frontend
+frontend/node_modules/
+frontend/dist/
+
+.DS_Store

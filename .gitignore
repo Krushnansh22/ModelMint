@@ -7,8 +7,25 @@ __pycache__/
 .pytest_cache/
 *.db
 
+# python env
+.venv/
+venv/
+.env
+*.egg-info/
+
 # frontend
 frontend/node_modules/
 frontend/dist/
+
+# demo build artifacts (scripts and text transcripts are committed)
+demo/screenshots/
+demo/frames/
+demo/frames.txt
+demo/audio/
+demo/.build/
+demo/*.mp4
+demo/*.ass
+demo/timeline.json
+
 
 .DS_Store

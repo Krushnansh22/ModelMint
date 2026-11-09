@@ -2,10 +2,12 @@ import { useState } from "react";
 import Dashboard from "./pages/Dashboard.jsx";
 import ModelDetail from "./pages/ModelDetail.jsx";
 import Monitoring from "./pages/Monitoring.jsx";
+import ApiKeys from "./pages/ApiKeys.jsx";
 
 const NAV = [
   { id: "registry", label: "Registry" },
   { id: "monitoring", label: "Monitoring" },
+  { id: "keys", label: "API keys" },
 ];
 
 export default function App() {
@@ -39,7 +41,11 @@ export default function App() {
             <button
               key={item.id}
               className={`nav-item ${view === item.id || (view === "detail" && item.id === "registry") ? "active" : ""}`}
-              onClick={() => (item.id === "monitoring" ? openMonitoring(null) : setView("registry"))}
+              onClick={() => {
+                if (item.id === "monitoring") openMonitoring(null);
+                else if (item.id === "keys") setView("keys");
+                else setView("registry");
+              }}
             >
               <span className="nav-dot" />
               {item.label}
@@ -48,18 +54,24 @@ export default function App() {
         </nav>
 
         <div className="sidebar-footer">
-          no auth · no multi-tenancy
+          scoped API keys
           <br />
-          MVP build
+          security build
         </div>
       </aside>
 
       <main className="main">
         {view === "registry" && <Dashboard onOpenModel={openModel} />}
         {view === "detail" && (
-          <ModelDetail modelId={selectedModel} onBack={() => setView("registry")} onViewMonitoring={openMonitoring} />
+          <ModelDetail
+            modelId={selectedModel}
+            onBack={() => setView("registry")}
+            onViewMonitoring={openMonitoring}
+            onDeleted={() => setView("registry")}
+          />
         )}
         {view === "monitoring" && <Monitoring initialModelId={monitoringModelId} />}
+        {view === "keys" && <ApiKeys />}
       </main>
     </div>
   );

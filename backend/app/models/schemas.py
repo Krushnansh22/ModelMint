@@ -14,6 +14,21 @@ class SchemaConfidence(str, Enum):
     UNKNOWN = "UNKNOWN"
 
 
+class TaskType(str, Enum):
+    TABULAR = "tabular"
+    TEXT = "text"
+    VISION = "vision"
+    EMBEDDING = "embedding"
+
+
+class InputContract(str, Enum):
+    """What shape of JSON body a model expects."""
+    FEATURES = "features"          # {"features": [...]}
+    TEXT = "text"                  # {"text": "..."} / {"texts": [...]}
+    IMAGE = "image"                # {"image_base64": "..."}
+    INSTANCES = "instances"        # {"instances": [ {...}, ... ]}
+
+
 class ValidationStatus(str, Enum):
     PASS = "PASS"
     PARTIAL = "PARTIAL"
@@ -54,6 +69,10 @@ class ModelMetadata(BaseModel):
 
     framework: str
     model_type: Optional[str] = None
+    task_type: Optional[str] = None
+    input_contract: Optional[str] = None
+    artifact_format: Optional[str] = None
+    framework_version: Optional[str] = None
     n_features: Optional[int] = None
     n_classes: Optional[int] = None
     estimator_params: Optional[dict[str, Any]] = None   # sklearn only

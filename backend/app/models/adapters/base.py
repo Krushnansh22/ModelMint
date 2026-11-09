@@ -6,10 +6,12 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 from app.models.schemas import (
-    ValidationResult,
-    SchemaDescriptor,
+    InputContract,
     ModelMetadata,
     PredictionResult,
+    SchemaDescriptor,
+    TaskType,
+    ValidationResult,
 )
 
 
@@ -34,6 +36,21 @@ class ModelAdapter(ABC):
     """One instance per loaded model. Instances are managed (and evicted) by
     the Model Manager (app/models/registry.py); adapters never manage their
     own lifecycle beyond load()/unload()."""
+
+    # Task/contract defaults; adapters override these as needed. Keeping them
+    # as plain class attributes means existing adapters stay source-compatible.
+    task_type: TaskType = TaskType.TABULAR
+    input_contract: InputContract = InputContract.FEATURES
+
+    def build_example_payload(self) -> dict:
+        """Task-aware example body for the Model Details page."""
+        schema = self.get_input_schema()
+        n = schema.feature_count if schema and schema.feature_count else 4
+        return {"features": [1.0] * n}
+
+    def predict_batch(self, payloads: list[dict]) -> list[PredictionResult]:
+        """Default batch implementation: sequential per-item predict()."""
+        return [self.predict(payload) for payload in payloads]
 
     @staticmethod
     @abstractmethod

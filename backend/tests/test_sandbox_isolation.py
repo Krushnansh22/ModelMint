@@ -41,6 +41,30 @@ def test_network_access_is_blocked_inside_sandbox():
         os.unlink(malicious_path)
 
 
+def test_sandboxed_adapter_proxy_predicts_and_unloads():
+    """Serving path (M2): the model lives in a worker process; the parent
+    only sends payloads and receives JSON-safe results."""
+    from app.services.sandboxed_adapter import SandboxedAdapterProxy
+
+    proxy = SandboxedAdapterProxy("sklearn")
+    proxy.load(FIXTURE)
+    try:
+        assert proxy.validate().status.value in ("PASS", "PARTIAL")
+        schema = proxy.get_input_schema()
+        assert schema is not None and schema.feature_count == 4
+
+        result = proxy.predict({"features": [5.1, 3.5, 1.4, 0.2]})
+        assert len(result.predictions) == 1
+
+        worker = proxy._proc
+        assert worker is not None and worker.is_alive()
+    finally:
+        proxy.unload()
+
+    assert proxy._proc is None
+    assert not worker.is_alive()
+
+
 def test_timeout_is_enforced():
     class _InfiniteLoop:
         def __reduce__(self):

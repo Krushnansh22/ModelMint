@@ -1,0 +1,20 @@
+# Optional format pack: gradient-boosted trees + TorchScript.
+#
+# The core install (requirements.txt) serves sklearn + ONNX. Install this file
+# to enable the tree-model and TorchScript adapters. The registry reports each
+# one as installed/uninstalled via GET /api/formats, and adapters raise a
+# friendly AdapterLoadError when a package is missing.
+#
+# Install with:
+#   uv pip install -r backend/requirements-formats.txt --python .venv/bin/python
+#
+# Deep-learning formats (Keras/TFLite/Hugging Face) live in
+# requirements-dl.txt; GGUF lives in requirements-gguf.txt.
+
+# Gradient-boosted trees (tabular)
+xgboost==2.1.1
+lightgbm==4.5.0
+catboost==1.2.7
+
+# TorchScript (tabular/vision). CPU wheel; swap for the CUDA index if needed.
+torch==2.4.1

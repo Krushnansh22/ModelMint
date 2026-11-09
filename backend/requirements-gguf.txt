@@ -1,0 +1,9 @@
+# Optional GGUF pack (stretch): local quantized LLM inference.
+#
+# llama-cpp-python compiles native code. For CUDA/Metal builds, follow the
+# project's install matrix instead of this CPU-default pin.
+#
+# Install with:
+#   uv pip install -r backend/requirements-gguf.txt --python .venv/bin/python
+
+llama-cpp-python==0.3.1

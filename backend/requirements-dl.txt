@@ -1,0 +1,21 @@
+# Optional deep-learning pack: Keras, TFLite, and Hugging Face bundles.
+#
+# This is a large install (TensorFlow + transformers). It includes the tree /
+# TorchScript pack so the `dl` Docker target is a superset of `full`.
+#
+# Install with:
+#   uv pip install -r backend/requirements-dl.txt --python .venv/bin/python
+#
+# For `.tflite` only, the lighter `tflite-runtime` wheel can replace full
+# TensorFlow. Keras/TFLite image payloads also need Pillow (installed below).
+
+-r requirements-formats.txt
+
+tensorflow==2.17.0
+tf-keras==2.17.0
+# tflite-runtime==2.14.0
+
+transformers==4.44.2
+safetensors==0.4.5
+huggingface-hub==0.24.6
+pillow==10.4.0

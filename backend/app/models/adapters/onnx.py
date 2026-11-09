@@ -170,10 +170,20 @@ class OnnxAdapter(ModelAdapter):
             except Exception:  # noqa: BLE001
                 pass
 
+        version = None
+        try:
+            import onnxruntime
+
+            version = onnxruntime.__version__
+        except Exception:  # noqa: BLE001
+            pass
+
         return ModelMetadata(
             framework="onnx",
             model_type="onnx-graph",
+            task_type=self.task_type.value,
             n_features=n_features,
+            framework_version=version,
             onnx_producer=producer,
             onnx_ir_version=ir_version,
         )

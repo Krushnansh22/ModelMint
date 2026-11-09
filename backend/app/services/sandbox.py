@@ -36,9 +36,12 @@ import traceback
 from dataclasses import dataclass
 from typing import Optional
 
-DEFAULT_TIMEOUT_SECONDS = 30
-DEFAULT_MEMORY_LIMIT_BYTES = 2 * 1024 * 1024 * 1024  # 2 GB
-DEFAULT_CPU_LIMIT_SECONDS = 30
+from app.config import get_settings
+
+_settings = get_settings()
+DEFAULT_TIMEOUT_SECONDS = _settings.sandbox_timeout_seconds
+DEFAULT_MEMORY_LIMIT_BYTES = _settings.sandbox_memory_limit_mb * 1024 * 1024
+DEFAULT_CPU_LIMIT_SECONDS = _settings.sandbox_cpu_limit_seconds
 
 def _select_start_method() -> str:
     """"spawn" is the safe default: forking a fresh OS process from inside a
@@ -66,6 +69,11 @@ class SandboxResult:
     schema_confidence: Optional[str] = None
     validation_reason: Optional[str] = None
     load_time_ms: Optional[float] = None
+    # JSON-safe introspection results, so the API process never has to load
+    # an untrusted pickle just to read its schema/metadata.
+    input_schema: Optional[dict] = None
+    output_schema: Optional[dict] = None
+    metadata: Optional[dict] = None
 
 
 def _lock_down_child(memory_limit_bytes: int, cpu_limit_seconds: int) -> None:
@@ -127,6 +135,22 @@ def _lock_down_child(memory_limit_bytes: int, cpu_limit_seconds: int) -> None:
             pass  # best-effort; don't crash the sandbox setup over this
 
 
+def _safe_schema_dump(getter) -> Optional[dict]:
+    try:
+        schema = getter()
+        return schema.model_dump() if schema is not None else None
+    except Exception:  # noqa: BLE001 -- introspection must not fail the load
+        return None
+
+
+def _safe_metadata_dump(getter) -> Optional[dict]:
+    try:
+        metadata = getter()
+        return metadata.model_dump() if metadata is not None else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def _child_entrypoint(
     framework: str,
     file_path: str,
@@ -146,6 +170,14 @@ def _child_entrypoint(
         adapter = adapter_cls()
         adapter.load(file_path)
         validation = adapter.validate()
+
+        # Introspect inside the sandbox and send back plain dicts. This is
+        # what lets analyzer.py avoid re-loading the untrusted pickle in the
+        # API process.
+        input_schema = _safe_schema_dump(adapter.get_input_schema)
+        output_schema = _safe_schema_dump(adapter.get_output_schema)
+        metadata = _safe_metadata_dump(adapter.get_metadata)
+
         adapter.unload()
 
         load_time_ms = (time.perf_counter() - t0) * 1000
@@ -156,6 +188,9 @@ def _child_entrypoint(
                 schema_confidence=validation.schema_confidence.value,
                 validation_reason=validation.reason,
                 load_time_ms=load_time_ms,
+                input_schema=input_schema,
+                output_schema=output_schema,
+                metadata=metadata,
             )
         )
     except Exception as e:  # noqa: BLE001 -- must not let the child crash silently

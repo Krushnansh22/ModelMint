@@ -173,11 +173,21 @@ class SklearnAdapter(ModelAdapter):
             except Exception:  # noqa: BLE001
                 params = None
 
+        version = None
+        try:
+            import sklearn
+
+            version = sklearn.__version__
+        except Exception:  # noqa: BLE001
+            pass
+
         return ModelMetadata(
             framework="sklearn",
             model_type=type(self._estimator).__name__ if self._estimator else None,
+            task_type=self.task_type.value,
             n_features=self._n_features,
             n_classes=self._n_classes,
+            framework_version=version,
             estimator_params=params,
         )
 
